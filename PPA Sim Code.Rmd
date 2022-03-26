@@ -1,0 +1,67 @@
+---
+title: "Untitled"
+author: "Y. Paulsen"
+date: "3/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+N <- 400
+prev <- .2
+PPA <- .91
+accept_crit <- .90
+MC <- 100000
+```
+
+
+```{r}
+
+PPA_sim_2 <- function(N, prev, PPA, accept_crit, MC){
+  n_pos <- rbinom(MC, N, prev)
+  grid <- expand.grid(n=1, size=n_pos, prob=PPA)
+  X <- mapply(rbinom, n=grid$n, size=grid$size, prob=grid$prob)
+  return(sum(X/n_pos>=accept_crit)/MC)
+}
+
+N <- seq(100, 10000, 100)
+prev <- seq(.1, 1, .1)
+PPA <- seq(.7, 1, .05)
+accept_crit <- seq(.7, 1, .05)
+
+params <- expand.grid(N=N, prev=prev, PPA=PPA,
+                      accept_crit=accept_crit)
+tictoc::tic()
+MC_res <- mapply(PPA_sim_2, N=params$N, prev=params$prev, PPA=params$PPA,
+       accept_crit=params$accept_crit, MC=10000)
+write.csv(MC_res, "")
+tictoc::toc()
+ 
+```
+
+
+```{r}
+N <- 400
+prev <- .2
+PPA <- .91
+accept_crit <- .90
+
+
+OG_sim <- function(N, prev, PPA, accept_crit){
+  n_pos <- ceiling(N*prev)
+  TP_fail <- ceiling(n_pos*accept_crit)-1
+  1-pbinom(TP_fail, n_pos, PPA)
+}
+
+tictoc::tic()
+OG_res <- mapply(OG_sim, N=params$N, prev=params$prev, PPA=params$PPA,
+       accept_crit=params$accept_crit)
+tictoc::toc()
+
+# OG_sim(14000, prev, PPA, accept_crit)
+
+
+```
